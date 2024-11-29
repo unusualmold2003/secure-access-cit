@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Two-Factor Authentication</h2>
+        
+        <form id="otpForm" class="space-y-4" autocomplete="off">
+            <input type="hidden" id="email" name="email">
+            
+            <div>
+                <label for="securityAnswer" class="block text-sm font-medium text-gray-700" id="challengeQuestionLabel">
+                    Security Challenge
+                </label>
+                <input type="text" 
+                    id="securityAnswer" 
+                    name="securityAnswer" 
+                    required
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter your security answer"
+                >
+            </div>
+
+            <div>
+                <label for="otp" class="block text-sm font-medium text-gray-700">
+                    One-Time Password (OTP)
+                </label>
+                <input type="text" 
+                    id="otp" 
+                    name="otp" 
+                    required 
+                    maxlength="6" 
+                    pattern="\d{6}"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="6-digit OTP"
+                >
+            </div>
+
+            <button type="submit" 
+                class="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                Verify Authentication
+            </button>
+
+            <div id="errorMessage" class="text-red-600 text-center mt-4"></div>
+        </form>
+    </div>
+
+    <script>
+        const otpForm = document.getElementById('otpForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const emailInput = document.getElementById('email');
+        const securityAnswerInput = document.getElementById('securityAnswer');
+        const otpInput = document.getElementById('otp');
+        const challengeQuestionLabel = document.getElementById('challengeQuestionLabel');
+
+        // Retrieve email from previous step (could be from session or localStorage)
+        const storedEmail = localStorage.getItem('authEmail');
+        if (storedEmail) {
+            emailInput.value = storedEmail;
+        }
+
+        // Assume challenge question is set dynamically
+        const challengeQuestion = localStorage.getItem('challengeQuestion') || 'Security Challenge';
+        challengeQuestionLabel.textContent = challengeQuestion;
+
+        otpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMessage.textContent = '';
+
+            const email = emailInput.value;
+            const securityAnswer = securityAnswerInput.value;
+            const otp = otpInput.value;
+
+            // Client-side validation
+            if (!email || !securityAnswer || !otp) {
+                errorMessage.textContent = 'Please fill in all fields';
+                return;
+            }
+
+            if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+                errorMessage.textContent = 'OTP must be 6 digits';
+                return;
+            }
+
+            try {
+                const response = await axios.post('/verify', { 
+                    email, 
+                    security_answer: securityAnswer, 
+                    otp 
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                // Clear sensitive data
+                localStorage.removeItem('authEmail');
+                localStorage.removeItem('challengeQuestion');
+
+                // Redirect or show success message
+                alert('Authentication Successful');
+                window.location.href = '/dashboard';
+            } catch (error) {
+                errorMessage.textContent = error.response?.data?.error || 'Verification failed';
+                console.error('Verification error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
