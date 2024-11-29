@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Email Configuration
 EMAIL_CONFIG = {
     'FROM': os.environ.get('EMAIL_FROM', 'shreevatsa.21cse@cambridge.edu.in'),
-    'PASSWORD': os.environ.get('EMAIL_PASSWORD', 'Newtonisnothuman123'),
+    'PASSWORD': os.environ.get('EMAIL_PASSWORD', '/'),
     'SMTP_SERVER': os.environ.get('SMTP_SERVER', 'smtp.gmail.com'),
     'SMTP_PORT': int(os.environ.get('SMTP_PORT', 587))
 }
